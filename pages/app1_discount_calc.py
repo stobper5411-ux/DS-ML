@@ -1,97 +1,138 @@
 import streamlit as st
 
+# ================= PAGE =================
+st.set_page_config(
+    page_title="ระบบคำนวณส่วนลด",
+    page_icon="💰",
+    layout="centered"
+)
+
 # ================= CSS =================
 st.markdown("""
 <style>
 
 /* พื้นหลัง */
 .stApp {
-    background-color: #f5f7fb;
+    background: linear-gradient(135deg, #0f172a, #1e293b);
+    color: white;
 }
 
+/* ซ่อนเมนู */
+#MainMenu {visibility: hidden;}
+footer {visibility: hidden;}
+
 /* กล่องหลัก */
-.main-container {
-    background: white;
-    padding: 30px;
-    border-radius: 15px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+.main-box {
+    background: rgba(255,255,255,0.08);
+    backdrop-filter: blur(10px);
+    padding: 40px;
+    border-radius: 25px;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+    margin-top: 30px;
 }
 
 /* หัวข้อ */
-h1 {
-    color: #1e293b;
+.title {
     text-align: center;
-    font-size: 40px;
-    font-weight: bold;
+    font-size: 42px;
+    font-weight: 800;
+    color: white;
+    margin-bottom: 10px;
+}
+
+/* subtitle */
+.subtitle {
+    text-align: center;
+    color: #cbd5e1;
+    margin-bottom: 30px;
+    font-size: 18px;
 }
 
 /* input */
 div[data-baseweb="input"] input {
-    border-radius: 10px;
-    border: 1px solid #cbd5e1;
-    padding: 10px;
-    font-size: 18px;
-    color: black;
-    background-color: white;
+    background-color: rgba(255,255,255,0.12);
+    color: white;
+    border: 2px solid rgba(255,255,255,0.15);
+    border-radius: 15px;
+    padding: 14px;
+    font-size: 22px;
+    font-weight: bold;
+}
+
+/* label */
+label {
+    color: white !important;
+    font-size: 18px !important;
+    font-weight: bold;
 }
 
 /* ปุ่ม */
 .stButton > button {
     width: 100%;
-    border-radius: 10px;
+    border-radius: 15px;
     border: none;
-    background-color: #2563eb;
+    background: linear-gradient(90deg, #3b82f6, #8b5cf6);
     color: white;
-    font-size: 16px;
+    font-size: 18px;
     font-weight: bold;
-    padding: 10px;
+    padding: 14px;
+    transition: 0.3s;
 }
 
-/* hover ปุ่ม */
+/* hover */
 .stButton > button:hover {
-    background-color: #1d4ed8;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(59,130,246,0.4);
 }
 
 /* metric */
 [data-testid="metric-container"] {
-    background-color: #ffffff;
-    border: 1px solid #e2e8f0;
-    padding: 15px;
-    border-radius: 12px;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.1);
+    padding: 20px;
+    border-radius: 20px;
+    text-align: center;
 }
 
-/* ตัวหนังสือ metric */
+/* metric text */
 [data-testid="metric-container"] label {
-    color: #475569 !important;
+    color: #cbd5e1 !important;
 }
 
 [data-testid="metric-container"] div {
-    color: black !important;
+    color: white !important;
 }
 
-/* กล่องแจ้งเตือน */
-.stAlert {
-    border-radius: 10px;
+/* success box */
+.stSuccess {
+    border-radius: 15px;
+}
+
+/* warning */
+.stWarning {
+    border-radius: 15px;
 }
 
 </style>
 """, unsafe_allow_html=True)
 
 # ================= UI =================
+st.markdown('<div class="main-box">', unsafe_allow_html=True)
 
-st.markdown('<div class="main-container">', unsafe_allow_html=True)
+st.markdown('<div class="title">💰 ระบบคำนวณส่วนลด</div>', unsafe_allow_html=True)
+st.markdown(
+    '<div class="subtitle">คำนวณยอดสุทธิและส่วนลดลูกค้าอัตโนมัติ</div>',
+    unsafe_allow_html=True
+)
 
-st.title("💰 ระบบคำนวณส่วนลดร้านค้า")
-st.info("คำนวณส่วนลดลูกค้าตามยอดการสั่งซื้อสะสม")
-
-# รับข้อมูล
+# input
 total_bill = st.number_input(
-    "กรุณากรอกยอดซื้อรวม (บาท):",
+    "กรอกยอดซื้อรวม (บาท)",
     min_value=0.0,
     step=100.0
 )
 
-# คำนวณ
+# logic
 if total_bill >= 1000:
     discount_rate = 0.15
 elif total_bill >= 500:
@@ -102,29 +143,39 @@ else:
 discount_amount = total_bill * discount_rate
 net_price = total_bill - discount_amount
 
-# ปุ่มคำนวณ
+# button
 if st.button("🧮 คำนวณยอดสุทธิ"):
-    st.divider()
+    
+    st.markdown("<br>", unsafe_allow_html=True)
 
     col1, col2 = st.columns(2)
 
     with col1:
-        st.metric("ยอดซื้อรวม", f"{total_bill:,.2f} บาท")
-        st.write(f"ส่วนลดที่ได้รับ: {discount_rate*100:.0f}%")
+        st.metric(
+            "ยอดซื้อรวม",
+            f"{total_bill:,.2f} ฿"
+        )
 
     with col2:
         st.metric(
             "ยอดชำระจริง",
-            f"{net_price:,.2f} บาท",
-            delta=f"-{discount_amount:,.2f} บาท"
+            f"{net_price:,.2f} ฿",
+            delta=f"-{discount_amount:,.2f}"
         )
 
-    if discount_rate > 0:
-        st.success(f"คุณได้รับส่วนลด {discount_amount:,.2f} บาท")
-    else:
-        st.warning("ยอดซื้อไม่ถึงเกณฑ์รับส่วนลด")
+    st.markdown("<br>", unsafe_allow_html=True)
 
-# ปุ่มกลับ
+    if discount_rate > 0:
+        st.success(
+            f"🎉 ได้รับส่วนลด {discount_rate*100:.0f}% "
+            f"คิดเป็นเงิน {discount_amount:,.2f} บาท"
+        )
+    else:
+        st.warning("⚠️ ยอดซื้อยังไม่ถึงเกณฑ์รับส่วนลด")
+
+st.markdown("<br>", unsafe_allow_html=True)
+
+# home button
 if st.button("🏠 กลับหน้าหลัก"):
     st.switch_page("app.py")
 
