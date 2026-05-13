@@ -4,63 +4,83 @@ import streamlit as st
 st.markdown("""
 <style>
 
-/* พื้นหลังหลัก */
+/* พื้นหลัง */
 .stApp {
-    background: linear-gradient(to right, #eef2ff, #f8fafc);
+    background-color: #f5f7fb;
 }
 
-/* กล่อง input */
+/* กล่องหลัก */
+.main-container {
+    background: white;
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+}
+
+/* หัวข้อ */
+h1 {
+    color: #1e293b;
+    text-align: center;
+    font-size: 40px;
+    font-weight: bold;
+}
+
+/* input */
 div[data-baseweb="input"] input {
-    border-radius: 12px;
-    border: 2px solid #6366f1;
+    border-radius: 10px;
+    border: 1px solid #cbd5e1;
     padding: 10px;
     font-size: 18px;
+    color: black;
+    background-color: white;
 }
 
 /* ปุ่ม */
 .stButton > button {
     width: 100%;
-    border-radius: 14px;
+    border-radius: 10px;
     border: none;
-    background: linear-gradient(90deg, #4f46e5, #7c3aed);
+    background-color: #2563eb;
     color: white;
-    font-size: 18px;
+    font-size: 16px;
     font-weight: bold;
-    padding: 12px;
-    transition: 0.3s;
+    padding: 10px;
 }
 
-/* เอฟเฟกต์ตอนเอาเมาส์ชี้ */
+/* hover ปุ่ม */
 .stButton > button:hover {
-    transform: scale(1.03);
-    background: linear-gradient(90deg, #4338ca, #6d28d9);
+    background-color: #1d4ed8;
 }
 
-/* metric card */
+/* metric */
 [data-testid="metric-container"] {
-    background-color: white;
-    border: 1px solid #e5e7eb;
-    padding: 20px;
-    border-radius: 18px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    background-color: #ffffff;
+    border: 1px solid #e2e8f0;
+    padding: 15px;
+    border-radius: 12px;
 }
 
-/* หัวข้อ */
-h1 {
-    color: #312e81;
-    text-align: center;
-    font-weight: 800;
+/* ตัวหนังสือ metric */
+[data-testid="metric-container"] label {
+    color: #475569 !important;
 }
 
-/* กล่อง info */
+[data-testid="metric-container"] div {
+    color: black !important;
+}
+
+/* กล่องแจ้งเตือน */
 .stAlert {
-    border-radius: 14px;
+    border-radius: 10px;
 }
 
 </style>
 """, unsafe_allow_html=True)
 
 # ================= UI =================
+
+st.markdown('<div class="main-container">', unsafe_allow_html=True)
+
 st.title("💰 ระบบคำนวณส่วนลดร้านค้า")
 st.info("คำนวณส่วนลดลูกค้าตามยอดการสั่งซื้อสะสม")
 
@@ -82,7 +102,7 @@ else:
 discount_amount = total_bill * discount_rate
 net_price = total_bill - discount_amount
 
-# แสดงผล
+# ปุ่มคำนวณ
 if st.button("🧮 คำนวณยอดสุทธิ"):
     st.divider()
 
@@ -90,20 +110,22 @@ if st.button("🧮 คำนวณยอดสุทธิ"):
 
     with col1:
         st.metric("ยอดซื้อรวม", f"{total_bill:,.2f} บาท")
-        st.write(f"🎁 ส่วนลดที่ได้รับ ({discount_rate*100:.0f}%)")
+        st.write(f"ส่วนลดที่ได้รับ: {discount_rate*100:.0f}%")
 
     with col2:
         st.metric(
             "ยอดชำระจริง",
             f"{net_price:,.2f} บาท",
-            delta=f"-{discount_amount:,.2f}"
+            delta=f"-{discount_amount:,.2f} บาท"
         )
 
     if discount_rate > 0:
-        st.success(f"คุณได้รับส่วนลดทั้งหมด {discount_amount:,.2f} บาท 🎉")
+        st.success(f"คุณได้รับส่วนลด {discount_amount:,.2f} บาท")
     else:
         st.warning("ยอดซื้อไม่ถึงเกณฑ์รับส่วนลด")
 
 # ปุ่มกลับ
 if st.button("🏠 กลับหน้าหลัก"):
     st.switch_page("app.py")
+
+st.markdown('</div>', unsafe_allow_html=True)
