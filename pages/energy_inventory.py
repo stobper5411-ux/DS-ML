@@ -41,7 +41,7 @@ def process_and_clean_data(df_raw_input):
     # 2. จัดการสต๊อกติดลบ
     df.loc[df['Current_Stock'] < 0, 'Current_Stock'] = np.nan
     # เติมค่าว่างด้วยค่าเฉลี่ยแยกตามสินค้า
-    df['Current_Stock'] = df['Current_Stock']fillna(
+    df['Current_Stock'] = df['Current_Stock'].fillna(
         df.groupby('Product_Name', observed=False)['Current_Stock'].transform('mean')
     )
 
