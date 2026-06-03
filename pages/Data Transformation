@@ -1,4 +1,3 @@
-%%writefile transform_app.py
 import streamlit as st # นำเข้าไลบรารี Streamlit สำหรับสร้าง Web Application
 import pandas as pd # นำเข้าไลบรารี Pandas สำหรับจัดการข้อมูล DataFrame
 import numpy as np # นำเข้าไลบรารี NumPy สำหรับการคำนวณเชิงตัวเลข
