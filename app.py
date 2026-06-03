@@ -1,170 +1,296 @@
-import streamlit as st # นำเข้าไลบรารี Streamlit สำหรับสร้าง Web Application
-import pandas as pd # นำเข้าไลบรารี Pandas สำหรับจัดการข้อมูล DataFrame
-import numpy as np # นำเข้าไลบรารี NumPy สำหรับการคำนวณเชิงตัวเลข
-from sklearn.preprocessing import StandardScaler, MinMaxScaler, LabelEncoder # นำเข้าเครื่องมือสำหรับ Preprocessing จาก scikit-learn
-import warnings # นำเข้าไลบรารี warnings เพื่อจัดการคำเตือน
-warnings.filterwarnings('ignore') # ตั้งค่าไม่ให้แสดงคำเตือน (เช่น DeprecationWarning)
+import streamlit as st
 
-# ตั้งค่าหน้าเว็บ Streamlit
-st.set_page_config(layout="wide", page_title="Data Transformation Web App") # กำหนดค่าการแสดงผลหน้าเว็บ (กว้าง, ชื่อหน้าเว็บ)
-st.title("🛠️ Data Transformation Web App") # แสดงชื่อหัวข้อหลักบนเว็บแอป
-st.error("ใช้สำหรับชุดข้อมูลที่มีโครงสร้างเหมือน redbull_clean.csv เท่านั้น")
-st.write("---") # แสดงเส้นแบ่งเพื่อจัดระเบียบหน้าเว็บ
+st.set_page_config(page_title="DS & ML Boot Camp", layout="wide", page_icon="🚀")
 
-# --- Function สำหรับแต่ละขั้นตอนการแปลงข้อมูล ---
+st.markdown("""
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=IBM+Plex+Sans+Thai:wght@300;400;500;600&display=swap');
 
-def apply_feature_engineering(df): # ฟังก์ชันสำหรับ Feature Engineering
-    if 'Unit_Price' in df.columns and 'Units_Sold' in df.columns: # ตรวจสอบว่ามีคอลัมน์ 'Unit_Price' และ 'Units_Sold' หรือไม่
-        df['Revenue'] = df['Unit_Price'] * df['Units_Sold'] # สร้างคอลัมน์ใหม่ 'Revenue' จากผลคูณ
-        st.success("✅ สร้าง Feature 'Revenue' สำเร็จ") # แสดงข้อความแจ้งว่าสำเร็จ
-    else:
-        st.warning("⚠️ ไม่พบ 'Unit_Price' หรือ 'Units_Sold' สำหรับ Feature Engineering") # แสดงข้อความเตือนถ้าไม่พบคอลัมน์
-    return df # ส่ง DataFrame ที่อัปเดตแล้วกลับไป
+/* ─── Reset & Base ─── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-def apply_scaling_data(df, method='StandardScaler'): # ฟังก์ชันสำหรับ Scaling Data
-    # ระบุคอลัมน์ที่จะ Scaled (จากตัวอย่างใน Lab)
-    scaled_cols = ['Unit_Price', 'Units_Sold', 'Marketing_Spend', 'Revenue'] # กำหนดรายการคอลัมน์ที่ต้องการ Scaling
-    existing_scaled_cols = [col for col in scaled_cols if col in df.columns and pd.api.types.is_numeric_dtype(df[col])] # กรองคอลัมน์ที่มีอยู่และเป็นตัวเลข
+html, body, [data-testid="stAppViewContainer"] {
+    background: #0a0a0f;
+    color: #e8e8f0;
+    font-family: 'IBM Plex Sans Thai', sans-serif;
+}
 
-    if not existing_scaled_cols: # หากไม่มีคอลัมน์ที่สามารถ Scaling ได้
-        st.warning(f"⚠️ ไม่มีคอลัมน์ตัวเลขที่ระบุใน {scaled_cols} ให้ทำการ Scaling") # แสดงข้อความเตือน
-        return df # ส่ง DataFrame เดิมกลับไป
+[data-testid="stAppViewContainer"] {
+    background:
+        radial-gradient(ellipse 80% 50% at 20% 10%, rgba(99,102,241,0.18) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 40% at 80% 80%, rgba(16,185,129,0.12) 0%, transparent 55%),
+        #0a0a0f;
+}
 
-    st.subheader(f"\nApplying {method} to: {', '.join(existing_scaled_cols)}") # แสดงหัวข้อย่อยว่ากำลังใช้ method ใดกับคอลัมน์ใดบ้าง
+/* Hide default Streamlit chrome */
+#MainMenu, header, footer, [data-testid="stToolbar"] { visibility: hidden; }
+[data-testid="stSidebar"] { display: none; }
+.block-container { padding: 2rem 3rem 4rem !important; max-width: 1100px !important; }
 
-    if method == 'StandardScaler': # ถ้าเลือกวิธี StandardScaler
-        scaler = StandardScaler() # สร้างอ็อบเจกต์ StandardScaler
-    elif method == 'MinMaxScaler': # ถ้าเลือกวิธี MinMaxScaler
-        scaler = MinMaxScaler() # สร้างอ็อบเจกต์ MinMaxScaler
-    else:
-        st.error("❌ วิธี Scaling ไม่ถูกต้อง! เลือก 'StandardScaler' หรือ 'MinMaxScaler'") # แสดงข้อผิดพลาดหาก method ไม่ถูกต้อง
-        return df # ส่ง DataFrame เดิมกลับไป
+/* ─── Hero ─── */
+.hero-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+    padding: 3.5rem 0 1rem;
+}
+.hero-eyebrow {
+    font-family: 'Syne', sans-serif;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: #6ee7b7;
+    background: rgba(16,185,129,0.12);
+    border: 1px solid rgba(16,185,129,0.3);
+    padding: 0.3rem 0.9rem;
+    border-radius: 100px;
+}
+.hero-title {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(2.6rem, 6vw, 4.2rem);
+    font-weight: 800;
+    line-height: 1.05;
+    letter-spacing: -0.03em;
+    color: #f0f0fa;
+}
+.hero-title span {
+    background: linear-gradient(135deg, #6366f1 0%, #06b6d4 50%, #10b981 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+.hero-sub {
+    font-size: 1.05rem;
+    font-weight: 300;
+    color: #9494b8;
+    margin-top: 0.25rem;
+    max-width: 560px;
+    line-height: 1.7;
+}
+.badge-row {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 0.5rem;
+    flex-wrap: wrap;
+}
+.badge {
+    font-family: 'Syne', sans-serif;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 0.3rem 0.85rem;
+    border-radius: 6px;
+    border: 1px solid;
+}
+.badge-indigo { color: #a5b4fc; border-color: rgba(99,102,241,0.4); background: rgba(99,102,241,0.08); }
+.badge-cyan   { color: #67e8f9; border-color: rgba(6,182,212,0.4);  background: rgba(6,182,212,0.08); }
+.badge-green  { color: #6ee7b7; border-color: rgba(16,185,129,0.4); background: rgba(16,185,129,0.08); }
 
-    # ตรวจสอบว่าคอลัมน์ 'Revenue' ถูกสร้างขึ้นแล้วหรือไม่ก่อน Scaling
-    # ถ้ามี 'Revenue' และถูกเลือกให้ Scale ให้รวมเข้าไปด้วย
+/* ─── Divider ─── */
+.divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(99,102,241,0.4), rgba(6,182,212,0.4), transparent);
+    margin: 2rem 0;
+}
 
-    try: # ลองทำการ Scaling
-        df[existing_scaled_cols] = scaler.fit_transform(df[existing_scaled_cols]) # Fit และ Transform ข้อมูลในคอลัมน์ที่เลือก
-        st.success(f"✅ ทำการ Scaling ด้วย {method} สำเร็จ") # แสดงข้อความแจ้งว่าสำเร็จ
-    except Exception as e: # หากเกิดข้อผิดพลาด
-        st.error(f"❌ เกิดข้อผิดพลาดในการ Scaling: {e}") # แสดงข้อผิดพลาด
-    return df # ส่ง DataFrame ที่อัปเดตแล้วกลับไป
+/* ─── Section header ─── */
+.section-label {
+    font-family: 'Syne', sans-serif;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: #6366f1;
+    margin-bottom: 1rem;
+}
+.section-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #e8e8f0;
+    margin-bottom: 1.5rem;
+}
 
-def apply_discretization(df): # ฟังก์ชันสำหรับ Discretization
-    if 'Customer_Score' in df.columns and pd.api.types.is_numeric_dtype(df['Customer_Score']): # ตรวจสอบว่ามีคอลัมน์ 'Customer_Score' และเป็นตัวเลข
-        try: # ลองทำการ Discretization
-            # ตรวจสอบจำนวน unique values ของ Customer_Score
-            if df['Customer_Score'].nunique() < 3: # ตรวจสอบจำนวนค่าที่ไม่ซ้ำกัน
-                st.warning("⚠️ 'Customer_Score' มี unique value น้อยเกินไปสำหรับการทำ qcut 3 bins") # แสดงข้อความเตือน
-                return df # ส่ง DataFrame เดิมกลับไป
+/* ─── Cards ─── */
+.cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 16px;
+    overflow: hidden;
+}
+.card {
+    background: #0e0e18;
+    padding: 1.6rem 1.8rem;
+    position: relative;
+    transition: background 0.2s;
+}
+.card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--accent1), var(--accent2));
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+.card:hover { background: #12121f; }
+.card:hover::before { opacity: 1; }
 
-            df['Customer_Score_Freq'] = pd.qcut(df['Customer_Score'], q=3, labels=['Low', 'Mid', 'High']) # ใช้ qcut แบ่งข้อมูลเป็น 3 ช่วงตามความถี่
-            le_Score = LabelEncoder()
-            df['Customer_Score_Freq'] = le_Score.fit_transform(df['Customer_Score_Freq'])
-            df = df.drop(columns=['Customer_Score'], errors='ignore') # ลบคอลัมน์ 'Customer_Score' เดิมออก
-            st.success("✅ ทำ Discretization บน 'Customer_Score' (สร้าง 'Customer_Score_Freq') สำเร็จ") # แสดงข้อความแจ้งว่าสำเร็จ
-        except Exception as e: # หากเกิดข้อผิดพลาด
-            st.error(f"❌ เกิดข้อผิดพลาดในการทำ Discretization: {e}") # แสดงข้อผิดพลาด
-    else:
-        st.warning("⚠️ ไม่พบ 'Customer_Score' หรือไม่ใช่ข้อมูลตัวเลขสำหรับ Discretization") # แสดงข้อความเตือนถ้าไม่พบคอลัมน์หรือเป็นชนิดข้อมูลที่ไม่ถูกต้อง
-    return df # ส่ง DataFrame ที่อัปเดตแล้วกลับไป
+.card-icon {
+    font-size: 1.8rem;
+    margin-bottom: 0.8rem;
+    display: block;
+}
+.card-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #e8e8f0;
+    margin-bottom: 0.4rem;
+}
+.card-desc {
+    font-size: 0.82rem;
+    color: #7070a0;
+    line-height: 1.55;
+}
+.card-tag {
+    display: inline-block;
+    font-size: 0.65rem;
+    font-family: 'Syne', sans-serif;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-top: 0.9rem;
+    padding: 0.2rem 0.65rem;
+    border-radius: 4px;
+    border: 1px solid;
+}
 
-def apply_encoding(df): # ฟังก์ชันสำหรับ Encoding
-    categorical_cols = ['Product_Variant', 'Region', 'Channel'] # กำหนดรายการคอลัมน์ประเภท Categorical
-    encoded_cols_mapping = {} # สร้าง dictionary สำหรับเก็บ mapping ของการ Encoding
+/* ─── Buttons ─── */
+.stButton > button {
+    font-family: 'Syne', sans-serif !important;
+    font-weight: 600 !important;
+    font-size: 0.9rem !important;
+    letter-spacing: 0.04em !important;
+    padding: 0.75rem 1.8rem !important;
+    border-radius: 10px !important;
+    transition: all 0.2s ease !important;
+    border: none !important;
+    cursor: pointer !important;
+    width: 100% !important;
+}
 
-    for col in categorical_cols: # วนลูปผ่านแต่ละคอลัมน์ Categorical
-        if col in df.columns and pd.api.types.is_string_dtype(df[col]): # ตรวจสอบว่าคอลัมน์มีอยู่และเป็นชนิด String
-            le = LabelEncoder() # สร้างอ็อบเจกต์ LabelEncoder
-            df[f'{col}_enc'] = le.fit_transform(df[col]) # ทำ Label Encoding และสร้างคอลัมน์ใหม่ที่มี '_enc' ต่อท้าย
-            encoded_cols_mapping[col] = {label: index for index, label in enumerate(le.classes_)} # เก็บ mapping
-            df = df.drop(columns=[col]) # ลบคอลัมน์เดิมออก
-            st.success(f"✅ ทำ Label Encoding บน '{col}' (สร้าง '{col}_enc') สำเร็จ") # แสดงข้อความแจ้งว่าสำเร็จ
-        elif col in df.columns: # ถ้าคอลัมน์มีอยู่แต่ไม่ใช่ชนิด String
-            st.warning(f"⚠️ คอลัมน์ '{col}' ไม่ใช่ข้อมูลประเภท String, ข้ามการ Encoding") # แสดงข้อความเตือน
+/* Primary button (first) */
+div[data-testid="column"]:nth-child(1) .stButton > button {
+    background: linear-gradient(135deg, #6366f1, #4f46e5) !important;
+    color: #fff !important;
+    box-shadow: 0 0 20px rgba(99,102,241,0.35) !important;
+}
+div[data-testid="column"]:nth-child(1) .stButton > button:hover {
+    background: linear-gradient(135deg, #7c7ff5, #6366f1) !important;
+    box-shadow: 0 0 32px rgba(99,102,241,0.55) !important;
+    transform: translateY(-2px) !important;
+}
 
-    if encoded_cols_mapping: # หากมีการ Encoding เกิดขึ้น
-        st.sidebar.subheader("การแมป Encoding:") # แสดงหัวข้อย่อยใน Sidebar
-        for original_col, mapping in encoded_cols_mapping.items(): # วนลูปแสดง mapping
-            st.sidebar.write(f"**{original_col}:**") # แสดงชื่อคอลัมน์เดิม
-            st.sidebar.json(mapping) # แสดง mapping ในรูปแบบ JSON
+/* Secondary button */
+div[data-testid="column"]:nth-child(2) .stButton > button {
+    background: rgba(16,185,129,0.1) !important;
+    color: #6ee7b7 !important;
+    border: 1px solid rgba(16,185,129,0.35) !important;
+}
+div[data-testid="column"]:nth-child(2) .stButton > button:hover {
+    background: rgba(16,185,129,0.18) !important;
+    box-shadow: 0 0 24px rgba(16,185,129,0.25) !important;
+    transform: translateY(-2px) !important;
+}
 
-    return df # ส่ง DataFrame ที่อัปเดตแล้วกลับไป
+/* ─── Footer ─── */
+.footer {
+    margin-top: 3rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid rgba(255,255,255,0.06);
+    font-size: 0.75rem;
+    color: #444466;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+.footer span { color: #6366f1; }
+</style>
+""", unsafe_allow_html=True)
 
-def apply_feature_extraction(df): # ฟังก์ชันสำหรับ Feature Extraction
-    if 'Date' in df.columns: # ตรวจสอบว่ามีคอลัมน์ 'Date' หรือไม่
-        try: # ลองทำการ Feature Extraction
-            df['Date'] = pd.to_datetime(df['Date'], errors='coerce') # แปลงคอลัมน์ 'Date' เป็น Datetime object
-            df['Year'] = df['Date'].dt.year # สกัดปี
-            df['Month'] = df['Date'].dt.month # สกัดเดือน
-            df['Day'] = df['Date'].dt.day # สกัดวัน
-            df['DayOfWeek'] = df['Date'].dt.dayofweek # สกัดวันในสัปดาห์
-            st.success("✅ ทำ Feature Extraction จาก 'Date' (สร้าง Year, Month, Day, DayOfWeek) สำเร็จ") # แสดงข้อความแจ้งว่าสำเร็จ
-        except Exception as e: # หากเกิดข้อผิดพลาด
-            st.error(f"❌ เกิดข้อผิดพลาดในการทำ Date Feature Extraction: {e}") # แสดงข้อผิดพลาด
-    else:
-        st.warning("⚠️ ไม่พบ 'Date' สำหรับ Feature Extraction") # แสดงข้อความเตือนถ้าไม่พบคอลัมน์
-    return df # ส่ง DataFrame ที่อัปเดตแล้วกลับไป
+# ── Hero ──────────────────────────────────────────────────────────────────────
+st.markdown("""
+<div class="hero-wrap">
+    <div class="hero-eyebrow">🚀 STOBPER32 · Intensive Workshop</div>
+    <div class="hero-title">Data Science &<br><span>Machine Learning</span></div>
+    <div class="hero-sub">
+        หลักสูตร Boot Camp แบบเข้มข้น 7 วัน เรียนรู้จากการปฏิบัติจริง
+        ครอบคลุมตั้งแต่พื้นฐาน Python ไปจนถึง ML Model ขั้นสูง
+    </div>
+    <div class="badge-row">
+        <div class="badge badge-indigo">7 Days</div>
+        <div class="badge badge-cyan">Hands-on</div>
+        <div class="badge badge-green">Project-based</div>
+    </div>
+</div>
+<div class="divider"></div>
+""", unsafe_allow_html=True)
 
-# --- Streamlit UI ---
+# ── Day 1 Cards ───────────────────────────────────────────────────────────────
+st.markdown("""
+<div class="section-label">📅 Day 1</div>
+<div class="section-title">การจัดการข้อมูลพื้นฐานและโครงสร้างข้อมูลด้วย Python</div>
 
-st.header("⚙️ การตั้งค่าการแปลงข้อมูล") # แสดงหัวข้อใน sidebar
+<div class="cards-grid">
+    <div class="card" style="--accent1:#6366f1;--accent2:#06b6d4;">
+        <span class="card-icon">💰</span>
+        <div class="card-title">ระบบคำนวณส่วนลดตามยอดซื้อ</div>
+        <div class="card-desc">ฝึกใช้ logic เงื่อนไข, ฟังก์ชัน และโครงสร้างข้อมูล
+        เพื่อสร้างระบบคำนวณส่วนลดแบบ tier-based</div>
+        <div class="card-tag" style="color:#a5b4fc;border-color:rgba(99,102,241,0.35);background:rgba(99,102,241,0.08);">
+            Python Logic
+        </div>
+    </div>
+    <div class="card" style="--accent1:#10b981;--accent2:#06b6d4;">
+        <span class="card-icon">🧹</span>
+        <div class="card-title">ทำความสะอาดข้อมูล</div>
+        <div class="card-desc">เรียนรู้เทคนิค Data Cleaning ด้วย pandas
+        จัดการ missing values, duplicates และ outliers</div>
+        <div class="card-tag" style="color:#6ee7b7;border-color:rgba(16,185,129,0.35);background:rgba(16,185,129,0.08);">
+            Pandas · EDA
+        </div>
+    </div>
+</div>
 
-uploaded_file = st.file_uploader("อัปโหลดไฟล์ CSV (ข้อมูลที่ผ่านการ Cleaning แล้ว)", type=["csv"]) # สร้าง widget สำหรับอัปโหลดไฟล์ CSV
+<div class="divider"></div>
+""", unsafe_allow_html=True)
 
-df = None # กำหนดค่า df เป็น None เริ่มต้น
-if uploaded_file is not None: # หากมีการอัปโหลดไฟล์
-    df = pd.read_csv(uploaded_file) # อ่านไฟล์ CSV เข้ามาเป็น DataFrame
-    st.subheader("📂 ข้อมูลที่อัปโหลด:") # แสดงหัวข้อย่อย
-    st.dataframe(df.head()) # แสดง 5 แถวแรกของ DataFrame
-    st.write(f"Shape: {df.shape[0]} แถว, {df.shape[1]} คอลัมน์") # แสดงขนาดของ DataFrame
+# ── Buttons ───────────────────────────────────────────────────────────────────
+st.markdown("<div class='section-label'>⚡ เปิดแอปพลิเคชัน</div>", unsafe_allow_html=True)
 
-    st.sidebar.write("--- เลือกขั้นตอนการแปลงข้อมูล ---") # แสดงเส้นแบ่งใน sidebar
-    enable_feature_engineering = st.sidebar.checkbox("1. Feature Engineering (สร้าง 'Revenue')", value=True) # สร้าง Checkbox สำหรับ Feature Engineering
-    enable_scaling = st.sidebar.checkbox("2. Scaling Data (Standard/MinMax)", value=True) # สร้าง Checkbox สำหรับ Scaling
-    scaling_method = st.sidebar.selectbox("เลือกวิธี Scaling:", ('StandardScaler', 'MinMaxScaler'), disabled=not enable_scaling) # สร้าง Selectbox สำหรับเลือกวิธี Scaling
-    enable_discretization = st.sidebar.checkbox("3. Discretization ('Customer_Score')", value=True) # สร้าง Checkbox สำหรับ Discretization
-    enable_encoding = st.sidebar.checkbox("4. Encoding (Product_Variant, Region, Channel)", value=True) # สร้าง Checkbox สำหรับ Encoding
-    enable_feature_extraction = st.sidebar.checkbox("5. Feature Extraction ('Date')", value=True) # สร้าง Checkbox สำหรับ Feature Extraction
+col1, col2, col3 = st.columns([1, 1, 1])
 
-    st.sidebar.write("---") # แสดงเส้นแบ่งใน sidebar
-    st.sidebar.markdown("**กดปุ่มด้านล่างเพื่อเริ่มการแปลงข้อมูล**") # แสดงข้อความเน้น
-    if st.sidebar.button("▶️ เริ่มการแปลงข้อมูล"): # สร้างปุ่มเพื่อเริ่มกระบวนการแปลงข้อมูล
-        st.subheader("🚀 เริ่มต้นการแปลงข้อมูล...") # แสดงหัวข้อย่อยว่ากำลังเริ่ม
-        processed_df = df.copy() # สร้างสำเนาของ DataFrame เพื่อไม่ให้แก้ไขข้อมูลต้นฉบับ
+with col1:
+    if st.button("💰 ระบบคำนวณส่วนลดตามยอดซื้อ"):
+        st.switch_page("pages/app1_discount_calc.py")
 
-        if enable_feature_engineering: # หากเลือก Feature Engineering
-            processed_df = apply_feature_engineering(processed_df) # เรียกใช้ฟังก์ชัน Feature Engineering
+with col2:
+    if st.button("🧹 ทำความสะอาดข้อมูล"):
+        st.switch_page("pages/santi.py")
 
-        if enable_scaling: # หากเลือก Scaling
-            # ต้องแน่ใจว่าคอลัมน์ Revenue มีอยู่ก่อนเรียก Scaling ถ้า Feature Engineering ถูกเลือก
-            processed_df = apply_scaling_data(processed_df, scaling_method) # เรียกใช้ฟังก์ชัน Scaling
-
-        if enable_discretization: # หากเลือก Discretization
-            processed_df = apply_discretization(processed_df) # เรียกใช้ฟังก์ชัน Discretization
-
-        if enable_encoding: # หากเลือก Encoding
-            processed_df = apply_encoding(processed_df) # เรียกใช้ฟังก์ชัน Encoding
-
-        if enable_feature_extraction: # หากเลือก Feature Extraction
-            processed_df = apply_feature_extraction(processed_df) # เรียกใช้ฟังก์ชัน Feature Extraction
-
-        st.subheader("📊 ข้อมูลหลังการแปลง (Transformed Data):") # แสดงหัวข้อย่อย
-        st.dataframe(processed_df.head()) # แสดง 5 แถวแรกของ DataFrame ที่ถูกแปลงแล้ว
-        st.write(f"Shape: {processed_df.shape[0]} แถว, {processed_df.shape[1]} คอลัมน์") # แสดงขนาดของ DataFrame
-
-        # Download button
-        csv = processed_df.to_csv(index=False).encode('utf-8') # แปลง DataFrame เป็น CSV string และเข้ารหัสเป็น utf-8
-        st.download_button( # สร้างปุ่มดาวน์โหลด
-            label="⬇️ ดาวน์โหลด Transformed Data เป็น CSV", # ข้อความบนปุ่ม
-            data=csv, # ข้อมูลที่จะดาวน์โหลด
-            file_name="redbull_transformed_data.csv", # ชื่อไฟล์เมื่อดาวน์โหลด
-            mime="text/csv", # ชนิดของไฟล์
-        )
-        st.success("✅ การแปลงข้อมูลเสร็จสมบูรณ์!") # แสดงข้อความแจ้งว่าสำเร็จ
-    else:
-        st.info("⬆️ โปรดอัปโหลดไฟล์ CSV และเลือกขั้นตอนที่ต้องการ แล้วกด 'เริ่มการแปลงข้อมูล'") # แสดงข้อความแนะนำ
-else:
-    st.info("⬆️ โปรดอัปโหลดไฟล์ CSV เพื่อเริ่มต้นใช้งาน") # แสดงข้อความแนะนำเมื่อยังไม่ได้อัปโหลดไฟล์
-if st.button("🏠 กลับหน้าหลัก"):
-    st.switch_page("app.py")
+# ── Footer ────────────────────────────────────────────────────────────────────
+st.markdown("""
+<div class="footer">
+    <div>Boot Camp · Data Science & Machine Learning · <span>STOBPER32</span></div>
+    <div>Day 1 / 7 — Python Fundamentals</div>
+</div>
+""", unsafe_allow_html=True)
